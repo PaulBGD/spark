@@ -35,6 +35,10 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -127,7 +131,11 @@ public class BukkitSparkPlugin extends JavaPlugin implements SparkPlugin {
 
     @Override
     public ThreadDumper getDefaultThreadDumper() {
-        return new ThreadDumper.Specific(new long[]{Thread.currentThread().getId()});
+        //return new ThreadDumper.Specific(new long[]{Thread.currentThread().getId()});
+        return new ThreadDumper.Combination(
+          new ThreadDumper.Specific(new long[]{Thread.currentThread().getId()}),
+          new ThreadDumper.Regex(new HashSet<>(Collections.singletonList("async-entity-.+")))
+        );
     }
 
     @Override

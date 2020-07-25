@@ -54,6 +54,8 @@ public interface ThreadDumper {
      */
     SamplerMetadata.ThreadDumper getMetadata();
 
+    void addMetadata(SamplerMetadata.ThreadDumper.Builder builder);
+
     /**
      * Implementation of {@link ThreadDumper} that generates data for all threads.
      */
@@ -69,7 +71,40 @@ public interface ThreadDumper {
                     .setType(SamplerMetadata.ThreadDumper.Type.ALL)
                     .build();
         }
+
+        @Override
+        public void addMetadata(SamplerMetadata.ThreadDumper.Builder builder) {
+            builder.setType(SamplerMetadata.ThreadDumper.Type.ALL);
+        }
     };
+
+    final class Combination implements ThreadDumper {
+        private final ThreadDumper[] dumpers;
+
+        public Combination(ThreadDumper... dumpers) {
+            this.dumpers = dumpers;
+        }
+
+        @Override
+        public ThreadInfo[] dumpThreads(ThreadMXBean threadBean) {
+            return Arrays.stream(this.dumpers).map(d -> d.dumpThreads(threadBean)).flatMap(Arrays::stream).toArray(ThreadInfo[]::new);
+        }
+
+        @Override
+        public SamplerMetadata.ThreadDumper getMetadata() {
+            SamplerMetadata.ThreadDumper.Builder builder = SamplerMetadata.ThreadDumper.newBuilder();
+            this.addMetadata(builder);
+            builder.setType(SamplerMetadata.ThreadDumper.Type.ALL);
+            return builder.build();
+        }
+
+        @Override
+        public void addMetadata(SamplerMetadata.ThreadDumper.Builder builder) {
+            for (ThreadDumper d : this.dumpers) {
+                d.addMetadata(builder);
+            }
+        }
+    }
 
     /**
      * Implementation of {@link ThreadDumper} that generates data for a specific set of threads.
@@ -100,6 +135,13 @@ public interface ThreadDumper {
                     .setType(SamplerMetadata.ThreadDumper.Type.SPECIFIC)
                     .addAllIds(Arrays.stream(this.ids).boxed().collect(Collectors.toList()))
                     .build();
+        }
+
+        @Override
+        public void addMetadata(SamplerMetadata.ThreadDumper.Builder builder) {
+            builder
+              .setType(SamplerMetadata.ThreadDumper.Type.SPECIFIC)
+              .addAllIds(Arrays.stream(this.ids).boxed().collect(Collectors.toList()));
         }
     }
 
@@ -153,6 +195,13 @@ public interface ThreadDumper {
                     .setType(SamplerMetadata.ThreadDumper.Type.REGEX)
                     .addAllPatterns(this.namePatterns.stream().map(Pattern::pattern).collect(Collectors.toList()))
                     .build();
+        }
+
+        @Override
+        public void addMetadata(SamplerMetadata.ThreadDumper.Builder builder) {
+            builder
+              .setType(SamplerMetadata.ThreadDumper.Type.REGEX)
+              .addAllPatterns(this.namePatterns.stream().map(Pattern::pattern).collect(Collectors.toList()));
         }
     }
 
