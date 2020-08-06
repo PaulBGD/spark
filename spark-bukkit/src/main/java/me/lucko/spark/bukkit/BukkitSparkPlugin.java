@@ -134,7 +134,7 @@ public class BukkitSparkPlugin extends JavaPlugin implements SparkPlugin {
         //return new ThreadDumper.Specific(new long[]{Thread.currentThread().getId()});
         return new ThreadDumper.Combination(
           new ThreadDumper.Specific(new long[]{Thread.currentThread().getId()}),
-          new ThreadDumper.Regex(new HashSet<>(Collections.singletonList("async-entity-.+")))
+          new ThreadDumper.Regex(new HashSet<>(Collections.singletonList("async-entity-.+-1")))
         );
     }
 
